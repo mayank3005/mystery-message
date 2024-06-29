@@ -10,9 +10,6 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const _user: User = session?.user;
 
-    console.log('_user:', _user);
-    console.log('session:', session)
-
     if (!session || !_user) {
         return Response.json(
             { success: false, message: 'Not authenticated' },
@@ -36,8 +33,6 @@ export async function GET(request: Request) {
                 }
             }
         ]);
-
-        console.log(user);
 
         if (!user || user.length === 0) {
             return Response.json(
