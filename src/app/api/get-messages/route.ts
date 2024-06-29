@@ -10,6 +10,9 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const _user: User = session?.user;
 
+    console.log('_user:', _user);
+    console.log('session:', session)
+
     if (!session || !_user) {
         return Response.json(
             { success: false, message: 'Not authenticated' },
@@ -18,12 +21,23 @@ export async function GET(request: Request) {
     }
     const userId = new mongoose.Types.ObjectId(_user._id);
     try {
+        // const user = await UserModel.aggregate([
+        //     { $match: { _id: userId } },
+        //     { $unwind: '$messages' },
+        //     { $sort: { 'messages.createdAt': -1 } },
+        //     { $group: { _id: '$_id', messages: { $push: '$messages' } } },
+        // ]);
+
         const user = await UserModel.aggregate([
             { $match: { _id: userId } },
-            { $unwind: '$messages' },
-            { $sort: { 'messages.createdAt': -1 } },
-            { $group: { _id: '$_id', messages: { $push: '$messages' } } },
-        ]).exec();
+            {
+                $project: {
+                    messages: { $slice: [{ $reverseArray: { $filter: { input: "$messages", as: "message", cond: {} } } }, 10] }
+                }
+            }
+        ]);
+
+        console.log(user);
 
         if (!user || user.length === 0) {
             return Response.json(
